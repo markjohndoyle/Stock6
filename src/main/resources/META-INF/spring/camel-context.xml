@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xmlns:osgi="http://www.springframework.org/schema/osgi"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+	<import resource="activemq.xml"/>
+	
+	<!-- For Spring properties -->
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:META-INF/config/configuration.properties"/>
+	</bean>
+	
+	<!-- The xtce space system model factory. Creates the model given an xtce xml file -->
+	<bean id="ssmodelFactory" class="org.hbird.core.xtce.XtceSpaceSystemModelFactory">
+		<constructor-arg value="${stocksix.xtce.file}"></constructor-arg>
+	</bean>
+	
+	<!-- The actual mode produced by the factory -->
+	<bean id="ssmodel" factory-bean="ssmodelFactory" factory-method="createSpaceSystemModel">
+	</bean>
+	
+	<!-- Model publisher. -->
+	<bean id="publisher" class="org.hbird.core.spacesystempublisher.publishing.InMemorySpaceSystemPublisher">
+		<property name="model" ref="ssmodel"></property>
+	</bean>
+	
+	<bean id="payload-codec" class="org.hbird.transport.payloadcodec.InMemoryPayloadCodec">
+	</bean>
+
+	<bean id="udpReceiver" class="org.hbird.stocksix.UdpReceiver" />
+	
+	
+	
+	
+	<!-- THE ROUTES - The core wiring of the system -->
+	<camelContext xmlns="http://camel.apache.org/schema/spring">
+		<camel:route>
+			<camel:from uri="activemq:requestParameterGroups"></camel:from>
+			<camel:to uri="bean:publisher?method=getParameterGroupList"></camel:to>
+		</camel:route>
+		
+		<camel:route>
+			<camel:from uri="activemq:requestCommands"></camel:from>
+			<camel:to uri="bean:publisher?method=getCommandList"></camel:to>
+		</camel:route>
+
+		<!-- This route reads any files in the tmp/strand folder, converts them to byte arrays and send them over -->
+		<!-- UDP to localhost:5150 -->
+		<camel:route>
+			<camel:from uri="file:///tmp/strand/"/>
+			<camel:convertBodyTo type="byte[]" />
+			<camel:to uri="mina:udp://localhost:5150?allowDefaultCodec=false&amp;sync=false&amp;codec=#byteCodec" />
+		</camel:route>
+		
+		<camel:route>
+			<camel:from uri="mina:udp://localhost:5150?allowDefaultCodec=false&amp;sync=false" />
+			<camel:to uri="bean:udpReceiver" />
+			<camel:to uri="bean:payload-codec" />
+			<camel:to uri="activemq:parameterGroups" />
+		</camel:route>
+	</camelContext>
+
+</beans>
