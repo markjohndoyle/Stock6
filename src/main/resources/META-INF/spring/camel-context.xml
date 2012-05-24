@@ -47,7 +47,15 @@
 		<property name="model" ref="ssmodel"></property>
 	</bean>
 	
+	<!--  Use the factory to get data required by the payload codec -->
+	<bean id="parameterGroups" factory-bean="publisher" factory-method="getParameterGroups"></bean>
+	<bean id="encodings" factory-bean="publisher" factory-method="getEncodings"></bean>
+	<bean id="restrictions" factory-bean="publisher" factory-method="getRestrictions"></bean>
+	
 	<bean id="payload-codec" class="org.hbird.transport.payloadcodec.InMemoryPayloadCodec">
+		<constructor-arg ref="parameterGroups"></constructor-arg>
+		<constructor-arg ref="encodings"></constructor-arg>
+		<constructor-arg ref="restrictions"></constructor-arg>
 	</bean>
 
 	<bean id="udpReceiver" class="org.hbird.stocksix.UdpReceiver" />
