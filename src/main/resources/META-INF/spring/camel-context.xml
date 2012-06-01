@@ -77,18 +77,34 @@
 
 		<!-- This route reads any files in the tmp/strand folder, converts them to byte arrays and send them over -->
 		<!-- UDP to localhost:5150 -->
-		<camel:route>
+<!-- 		<camel:route>
 			<camel:from uri="file:///tmp/strand/"/>
 			<camel:convertBodyTo type="byte[]" />
 			<camel:to uri="mina:udp://localhost:5150?allowDefaultCodec=false&amp;sync=false&amp;codec=#byteCodec" />
+		</camel:route> -->
+		
+		<camel:route>
+			<camel:from uri="mina:udp://192.168.0.255:4023?allowDefaultCodec=false&amp;sync=false" />
+			<camel:to uri="bean:udpReceiver" />
+			<camel:to uri="bean:payload-codec" />
+			<!-- <camel:multicast>
+				<camel:to uri="activemq:parameterGroups" /> -->
+				<camel:to uri="activemq:topic:parameterGroups" />
+			<!-- </camel:multicast> -->
 		</camel:route>
 		
 		<camel:route>
-			<camel:from uri="mina:udp://localhost:5150?allowDefaultCodec=false&amp;sync=false" />
-			<camel:to uri="bean:udpReceiver" />
-			<camel:to uri="bean:payload-codec" />
-			<camel:to uri="activemq:parameterGroups" />
+			<camel:from uri="activemq:topic:parameterGroups" />
+			<camel:marshal><camel:json/></camel:marshal>
+			<camel:setHeader headerName="Exchange.CONTENT_TYPE">
+				<constant>application/json</constant>
+			</camel:setHeader>
+			
+			<camel:to uri="http://10.48.18.54:8000/nest/store?throwExceptionOnFailure=false" />
+			<!-- <camel:to uri="file:///tmp/responses/" /> -->
 		</camel:route>
+		
+		
 	</camelContext>
 
 </beans>

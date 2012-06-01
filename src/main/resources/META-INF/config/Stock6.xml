@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SpaceSystem xmlns="http://www.omg.org/space/xtce"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.omg.org/space/xtce http://www.omg.org/space/xtce/SpaceSystemV1.0.xsd"
+	name="Stock6" shortDescription="MCS configuration for the Groundstation at Logica">
+
+
+	<Header validationStatus="Draft" date="2011-12-08" version="0.0.1-SNAPSHOT" classification="NotClassified">
+		<AuthorSet>
+			<Author>Mark Doyle - mark.doyle@logica.com</Author>
+			<Author>Johannes Klug - johannes.klug@logica.com</Author>
+		</AuthorSet>
+		<HistorySet>
+			<History>Version 0.1</History>
+		</HistorySet>
+	</Header>
+
+
+	<!-- Telemetry definition -->
+	<TelemetryMetaData>
+
+		<ParameterTypeSet>
+			<IntegerParameterType name="1BitFlag"
+				sizeInBits="1" signed="false" shortDescription="1-bit Flag">
+				<UnitSet></UnitSet>
+			</IntegerParameterType>
+
+			<IntegerParameterType name="8BitUInteger"
+				sizeInBits="8" signed="false" shortDescription="8-bit unsigned integer">
+				<UnitSet></UnitSet>
+			</IntegerParameterType>
+
+			<IntegerParameterType name="32BitInteger"
+				sizeInBits="32" signed="true" shortDescription="22-bit signed integer">
+				<UnitSet></UnitSet>
+				<!-- <BinaryDataEncoding bitOrder="mostSignificantBitFirst" /> -->
+			</IntegerParameterType>
+
+		</ParameterTypeSet>
+
+		<ParameterSet>
+			<!-- Virtual Header Field -->
+			<Parameter parameterTypeRef="8BitUInteger" name="TelemetryId" />
+			<!-- Payload starts here -->
+			<Parameter parameterTypeRef="32BitInteger" name="Azimuth" />
+			<Parameter parameterTypeRef="32BitInteger" name="Elevation" />
+		</ParameterSet>
+
+		<ContainerSet>
+			<SequenceContainer name="PositionPayload"
+				shortDescription="">
+				<EntryList>
+					<ParameterRefEntry parameterRef="Azimuth" />
+					<ParameterRefEntry parameterRef="Elevation" />
+				</EntryList>
+				<BaseContainer containerRef="HEADER">
+					<RestrictionCriteria>
+						<ComparisonList>
+							<Comparison parameterRef="TelemetryId" value="192.168.0.255" />
+						</ComparisonList>
+					</RestrictionCriteria>
+				</BaseContainer>
+			</SequenceContainer>
+
+		</ContainerSet>
+
+	</TelemetryMetaData>
+
+	
+	<CommandMetaData>
+		<ParameterTypeSet>
+			<IntegerParameterType name="8BitUint" signed="false" shortDescription="9 but unsigned integer - MSB" sizeInBits="9">
+				<UnitSet></UnitSet>
+			</IntegerParameterType>
+			<IntegerParameterType name="8BitUint" signed="false" shortDescription="8 bit unsigned integer - MSB" sizeInBits="8">
+				<UnitSet></UnitSet>
+			</IntegerParameterType>
+		</ParameterTypeSet>
+		
+		<ParameterSet>
+			<Parameter parameterTypeRef="8BitUint" name="CommandId">
+				<ParameterProperties readOnly="true" dataSource="constant" />
+			</Parameter>
+			<Parameter parameterTypeRef="8BitUint" name="TargetAzimuthParameter"></Parameter>
+			<Parameter parameterTypeRef="8BitUint" name="TargetElevationParameter"></Parameter>
+		</ParameterSet>
+
+		<MetaCommandSet>
+			<MetaCommand name="RotateAzimuthElevation" shortDescription="Rotates the G/S to a new azimuth and elevation">
+				<ArgumentList>
+					<Argument name="Cmd id" argumentTypeRef="CommandId"></Argument>
+					<Argument name="TargetAzimuth" argumentTypeRef="TargetAzimuthParameter"></Argument>
+					<Argument name="TargetElevation" argumentTypeRef="TargetElevationParameter"></Argument>
+				</ArgumentList>
+			</MetaCommand>
+		</MetaCommandSet>
+	</CommandMetaData>
+
+</SpaceSystem>
