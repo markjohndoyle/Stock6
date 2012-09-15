@@ -31,7 +31,7 @@
 			</IntegerParameterType>
 
 			<IntegerParameterType name="32BitInteger"
-				sizeInBits="32" signed="true" shortDescription="22-bit signed integer">
+				sizeInBits="32" signed="true" shortDescription="32-bit signed integer">
 				<UnitSet></UnitSet>
 				<!-- <BinaryDataEncoding bitOrder="mostSignificantBitFirst" /> -->
 			</IntegerParameterType>
